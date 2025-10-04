@@ -1,2 +1,2 @@
-# AutoReview
-Multi-agent system for automated literature review writing.
+# Code coming soon.
+
