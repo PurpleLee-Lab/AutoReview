@@ -1,5 +1,15 @@
 from AutoReview_workflow import AutoReview_workflow
+import argparse
+
+
+def parse_args():
+    """解析命令行参数"""
+    parser = argparse.ArgumentParser(description="AutoReview Workflow Runner")
+    parser.add_argument('--topic', type=str, default='LLM-base Agent', help='Review topic name')
+    return parser.parse_args()
+
 
 if __name__ == '__main__':
-    Review = AutoReview_workflow()
-    Review.run()
+    args = parse_args()
+    review = AutoReview_workflow(topic=args.topic)
+    review.run()
