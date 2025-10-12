@@ -30,7 +30,6 @@ class BaseAgent:
         ]
         return messages
 
-    # ========== 核心调用逻辑 ==========
     def run(self, user_input: str) -> str:
         messages = self._build_prompt(user_input)
 

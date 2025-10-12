@@ -3,9 +3,36 @@ import time
 import os
 from pypdf import PdfReader
 
+
 # === Base example tool (kept for demo) ===
 def tool_1() -> str:
     return "This is a tool"
+
+
+# === PDF Reader Tool ===
+def extract_pdf_text(filepath: str, MAX_LEN: int = 50000) -> str:
+    """
+    Extract text from a local PDF file.
+    Returns up to MAX_LEN characters of extracted text.
+    """
+    pdf_text = ""
+    try:
+        reader = PdfReader(filepath)
+        for page_number, page in enumerate(reader.pages, start=1):
+            try:
+                text = page.extract_text()
+            except Exception:
+                return f"FAILED to extract text at page {page_number}."
+
+            pdf_text += f"--- Page {page_number} ---\n{text}\n"
+
+        return pdf_text[:MAX_LEN]
+    except Exception as e:
+        return f"PDF reading failed: {e}"
+    finally:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        time.sleep(1.0)
 
 
 # === Main ArxivSearch Tool Class ===
@@ -30,7 +57,7 @@ class ArxivSearch:
                 break
         return ' '.join(processed_query)
 
-    def find_papers_by_str(self, query: str, N: int = 20) -> str:
+    def find_papers_by_str(self, query: str, N: int = 5) -> str:
         """
         Search for papers on arXiv by a query string.
         Returns formatted paper summaries including title, summary, publication date, and arXiv ID.
@@ -68,36 +95,24 @@ class ArxivSearch:
                     continue
         return None
 
-    def retrieve_full_paper_text(self, paper_id: str, MAX_LEN: int = 50000) -> str:
+    def retrieve_full_paper(self, paper_id: str) -> str:
         """
-        Download and extract text from an arXiv paper by ID.
-        Returns up to MAX_LEN characters of extracted text.
+        Download an arXiv paper by ID to a local PDF file.
+        Returns the local file path (to be used by extract_pdf_text).
         """
-        pdf_text = ""
         try:
             paper = next(arxiv.Client().results(arxiv.Search(id_list=[paper_id])))
-            paper.download_pdf(filename="downloaded-paper.pdf")
-            reader = PdfReader('downloaded-paper.pdf')
-
-            for page_number, page in enumerate(reader.pages, start=1):
-                try:
-                    text = page.extract_text()
-                except Exception:
-                    os.remove("downloaded-paper.pdf")
-                    time.sleep(2.0)
-                    return "EXTRACTION FAILED"
-
-                pdf_text += f"--- Page {page_number} ---\n{text}\n"
-
-            os.remove("downloaded-paper.pdf")
+            filepath = f"arxiv_{paper_id}.pdf"
+            paper.download_pdf(filename=filepath)
             time.sleep(2.0)
-            return pdf_text[:MAX_LEN]
-        except Exception:
-            return "FAILED TO RETRIEVE PAPER TEXT"
+            return filepath
+        except Exception as e:
+            return f"DOWNLOAD FAILED: {e}"
 
 
 # === Instantiate the Search Engine ===
 arxiv_toolkit = ArxivSearch()
+
 
 # === Register All Tools ===
 ALL_TOOLS = {
@@ -106,7 +121,7 @@ ALL_TOOLS = {
             "type": "function",
             "function": {
                 "name": "tool_1",
-                "description": "A simple tool that returns a string.",
+                "description": "A simple demo tool that returns a string.",
                 "parameters": {"type": "object", "properties": {}}
             }
         },
@@ -123,7 +138,7 @@ ALL_TOOLS = {
                     "type": "object",
                     "properties": {
                         "query": {"type": "string", "description": "Research topic or keywords to search for."},
-                        "N": {"type": "integer", "description": "Number of results to return (default 20)."}
+                        "N": {"type": "integer", "description": "Number of results to return (default 5)."}
                     },
                     "required": ["query"]
                 }
@@ -132,22 +147,40 @@ ALL_TOOLS = {
         "func": arxiv_toolkit.find_papers_by_str
     },
 
-    "retrieve_full_paper_text": {
+    "retrieve_full_paper": {
         "meta": {
             "type": "function",
             "function": {
-                "name": "retrieve_full_paper_text",
-                "description": "Download and extract full text from an arXiv paper given its ID.",
+                "name": "retrieve_full_paper",
+                "description": "Download an arXiv paper by ID and return the local PDF file path.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "paper_id": {"type": "string", "description": "arXiv paper ID, e.g. '2401.12345'."},
-                        "MAX_LEN": {"type": "integer", "description": "Maximum number of characters to return (default 50000)."}
+                        "paper_id": {"type": "string", "description": "arXiv paper ID, e.g. '2401.12345'."}
                     },
                     "required": ["paper_id"]
                 }
             }
         },
-        "func": arxiv_toolkit.retrieve_full_paper_text
+        "func": arxiv_toolkit.retrieve_full_paper
+    },
+
+    "extract_pdf_text": {
+        "meta": {
+            "type": "function",
+            "function": {
+                "name": "extract_pdf_text",
+                "description": "Extract text from a local PDF file path.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "filepath": {"type": "string", "description": "Path to the local PDF file."},
+                        "MAX_LEN": {"type": "integer", "description": "Maximum number of characters to return (default 50000)."}
+                    },
+                    "required": ["filepath"]
+                }
+            }
+        },
+        "func": extract_pdf_text
     }
 }
