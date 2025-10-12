@@ -1,4 +1,5 @@
-import BaseAgent
+from Agents.BaseAgent import BaseAgent
 
 class GradStuAgent(BaseAgent):
-    pass
+    def __init__(self):
+        pass
