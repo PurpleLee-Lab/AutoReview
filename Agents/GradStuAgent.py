@@ -5,7 +5,7 @@ class GradStuAgent(BaseAgent):
         return ""
 
     def role_description(self) -> str:
-        return "a programmer with an annual salary of one million!"
+        return "a superman! I can do anything!"
 
     def example_command(self) -> str:
         return ""

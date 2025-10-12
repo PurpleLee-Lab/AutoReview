@@ -19,6 +19,8 @@ class BaseAgent:
                 "role": "system",
                 "content": (
                     f"You are {role_desc_text}\n\n"
+                    f"Always act and respond consistently with this role, "
+                    f"even when the user asks about your identity.\n\n"
                     f"### Context:\n{context_text}\n\n"
                     f"### Example Command:\n{example_cmd_text}\n\n"
                     # f"Your task: interpret the user's request and take appropriate action."
