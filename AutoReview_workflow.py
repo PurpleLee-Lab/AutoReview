@@ -19,4 +19,5 @@ class AutoReview_workflow:
         print(f"{self.topic}, Start Review!")
 
     def test(self):
-        pass
+        response = self.GradStu.run("Who are you?")
+        print(response)

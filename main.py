@@ -15,4 +15,4 @@ if __name__ == '__main__':
     api_key = os.getenv('api_key')
     args = parse_args()
     review = AutoReview_workflow(topic=args.topic, api_key = api_key)
-    review.run()
+    review.test()
