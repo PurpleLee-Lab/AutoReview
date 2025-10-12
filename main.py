@@ -1,6 +1,7 @@
 from AutoReview_workflow import AutoReview_workflow
 import argparse
-
+from dotenv import load_dotenv
+import os
 
 def parse_args():
     """解析命令行参数"""
@@ -10,6 +11,8 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    load_dotenv()
+    api_key = os.getenv('api_key')
     args = parse_args()
-    review = AutoReview_workflow(topic=args.topic)
+    review = AutoReview_workflow(topic=args.topic, api_key = api_key)
     review.run()
