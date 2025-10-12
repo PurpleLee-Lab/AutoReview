@@ -1,35 +1,48 @@
+import json
+from openai import OpenAI
+
 class BaseAgent:
-    def __init__(self, model="deepseek-chat", notes=None, max_steps=100, openai_api_key=None):
-        self.max_steps = max_steps
-        self.model = model
-        self.phases = []
-        self.plan = str()
-        self.report = str()
-        self.history = list()
-        self.prev_comm = str()
-        self.prev_report = str()
-        self.exp_results = str()
-        self.dataset_code = str()
-        self.results_code = str()
-        self.lit_review_sum = str()
-        self.interpretation = str()
-        self.prev_exp_results = str()
-        self.reviewer_response = str()
-        self.prev_results_code = str()
-        self.prev_interpretation = str()
-        self.openai_api_key = openai_api_key
+    def __init__(self, tools, api_key):
+        self.tools_meta_map = tools
+        self.tools_meta = [v["meta"] for v in tools.values()]
+        self.tool_func_map = {k: v["func"] for k, v in tools.items()}
+        base_url = "https://api.deepseek.com"
+        self.client = OpenAI(api_key=api_key, base_url=base_url)
 
-        self.second_round = False
-        self.max_hist_len = 15
+    def run(self, user_input: str) -> str:
+        response = self.client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_input}
+            ],
+            tools=self.tools_meta,
+            tool_choice="auto",
+            stream=False
+        )
 
-    def context(self, phase):
-        raise NotImplementedError("Subclasses should implement this method.")
+        ai_message = response.choices[0].message
+        content = ai_message.content
+        tool_calls = ai_message.tool_calls
 
-    def phase_prompt(self, phase):
-        raise NotImplementedError("Subclasses should implement this method.")
+        if tool_calls:
+            tool_call = tool_calls[0]
+            tool_name = tool_call.function.name
+            tool_args = json.loads(tool_call.function.arguments)
+            tool_func = self.tool_func_map.get(tool_name)
 
-    def command_descriptions(self, phase):
-        raise NotImplementedError("Subclasses should implement this method.")
+            tool_result = tool_func(**tool_args) if tool_func else f"Unknown tool: {tool_name}"
 
-    def example_command(self, phase):
-        raise NotImplementedError("Subclasses should implement this method.")
+            follow_up = self.client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": user_input},
+                    {"role": "assistant", "tool_calls": [tool_call]},
+                    {"role": "tool", "tool_call_id": tool_call.id, "content": tool_result},
+                ],
+                stream=False
+            )
+            return follow_up.choices[0].message.content
+
+        return content
