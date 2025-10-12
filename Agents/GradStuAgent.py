@@ -5,7 +5,10 @@ class GradStuAgent(BaseAgent):
         return ""
 
     def role_description(self) -> str:
-        return "a superman! I can do anything!"
+        return """
+                You are the Graduate Student Agent responsible for writing a scientific literature review
+                under the supervision of a Professor Agent.
+              """
 
     def example_command(self) -> str:
         return ""

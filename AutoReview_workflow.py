@@ -9,7 +9,10 @@ class AutoReview_workflow:
 
         self.api_key = api_key
         tools_map_GradStu = { "tool_1": ALL_TOOLS["tool_1"] }
-        tools_map_LitRetr = { "tool_1": ALL_TOOLS["tool_1"] }
+        
+        tools_map_LitRetr = { "find_papers_by_str": ALL_TOOLS["find_papers_by_str"],
+                              "retrieve_full_paper_text": ALL_TOOLS["retrieve_full_paper_text"] }
+        
         tools_map_Professor = { "tool_1": ALL_TOOLS["tool_1"] }
         self.GradStu = GradStuAgent(tools = tools_map_GradStu, api_key = self.api_key)
         self.LitRetr = LitRetrAgent(tools = tools_map_LitRetr, api_key = self.api_key)
@@ -18,6 +21,14 @@ class AutoReview_workflow:
     def run(self):
         print(f"{self.topic}, Start Review!")
 
-    def test(self):
-        response = self.GradStu.run("Who are you?")
+    def test_Agent(self):
+        response = self.GradStu.run("What tools do you have?")
+        print("\n--- Response of GradStu ---")
         print(response)
+        response = self.LitRetr.run("What tools do you have?")
+        print("\n--- Response of LitRetr ---")
+        print(response)
+        response = self.Professor.run("What tools do you have?")
+        print("\n--- Response of Professor ---")
+        print(response)
+        
