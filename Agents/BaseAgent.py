@@ -78,8 +78,7 @@ class BaseAgent:
                 tool_result = (
                     tool_func(**tool_args) if tool_func else f"Unknown tool: {tool_name}"
                 )
-                print(tool_result[:100] + '...')
-
+                print(tool_result[:100] + '...') 
 
                 # 把工具调用及结果追加进对话上下文
                 messages += [

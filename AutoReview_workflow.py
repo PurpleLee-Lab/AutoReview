@@ -23,12 +23,12 @@ class AutoReview_workflow:
         print(f"{self.topic}, Start Review!")
 
     def test_Agent(self):
-        # response = self.GradStu.run("What tools do you have?")
-        # print("\n--- Response of GradStu ---")
-        # print(response)
-        response = self.LitRetr.run("Find a review paper on agent and download it.")
-        print("\n--- Response of LitRetr ---")
+        response = self.GradStu.run("What tools do you have?")
+        print("\n--- Response of GradStu ---")
         print(response)
+        # response = self.LitRetr.run("Find a review paper on agent and download it.")
+        # print("\n--- Response of LitRetr ---")
+        # print(response)
         # response = self.Professor.run("What tools do you have?")
         # print("\n--- Response of Professor ---")
         # print(response)
