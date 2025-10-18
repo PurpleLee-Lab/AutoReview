@@ -24,7 +24,7 @@ class BaseAgent:
         system_msg = {
             "role": "system",
             "content": (
-                f"You are {role_desc_text}\n\n"
+                f"{role_desc_text}\n\n"
                 f"Always act and respond consistently with this role, "
                 f"even when the user asks about your identity.\n\n"
                 f"### Context:\n{context_text}\n\n"
@@ -44,61 +44,50 @@ class BaseAgent:
         return messages
 
     def run(self, user_input: str) -> str:
-        """执行对话推理 + 工具调用 + 记忆更新"""
-        # 构建 prompt（含历史）
+        # 构建 prompt
         messages = self._build_prompt(user_input)
-
-        # 向模型请求响应
-        response = self.client.chat.completions.create(
-            model="deepseek-chat",
-            messages=messages,
-            tools=self.tools_meta,
-            tool_choice="auto",
-            stream=False,
-        )
-
-        ai_message = response.choices[0].message
-        content = ai_message.content
-        tool_calls = ai_message.tool_calls
-
-        # 将用户输入加入历史
         self.history.append(("user", user_input))
 
-        # 工具调用情况
-        if tool_calls:
-            tool_call = tool_calls[0]
-            tool_name = tool_call.function.name
-            tool_args = json.loads(tool_call.function.arguments)
-            tool_func = self.tool_func_map.get(tool_name)
-
-            # 调用工具
-            tool_result = (
-                tool_func(**tool_args) if tool_func else f"Unknown tool: {tool_name}"
-            )
-
-            # 模型获取工具执行结果后的跟进
-            follow_up = self.client.chat.completions.create(
+        while True:
+            # 调用模型
+            response = self.client.chat.completions.create(
                 model="deepseek-chat",
-                messages=messages
-                + [
-                    {"role": "assistant", "tool_calls": [tool_call]},
-                    {"role": "tool", "tool_call_id": tool_call.id, "content": tool_result},
-                ],
+                messages=messages,
+                tools=self.tools_meta,
+                tool_choice="auto",
                 stream=False,
             )
-            final_content = follow_up.choices[0].message.content
 
-            # 将AI回复加入历史
-            self.history.append(("assistant", final_content))
-            # 控制历史长度
-            self.history = self.history[-self.max_hist_len:]
+            ai_message = response.choices[0].message
+            content = ai_message.content
+            tool_calls = ai_message.tool_calls
 
-            return final_content
+            # 如果没有工具调用，则返回结果
+            if not tool_calls:
+                self.history.append(("assistant", content))
+                self.history = self.history[-self.max_hist_len:]
+                return content
 
-        # 没有工具调用时，直接使用AI回复
-        self.history.append(("assistant", content))
-        self.history = self.history[-self.max_hist_len:]
-        return content
+            # 如果有多个工具调用，可以逐个处理
+            for tool_call in tool_calls:
+                tool_name = tool_call.function.name
+                tool_args = json.loads(tool_call.function.arguments)
+                print("工具调用：", tool_name, tool_args)
+
+                tool_func = self.tool_func_map.get(tool_name)
+                tool_result = (
+                    tool_func(**tool_args) if tool_func else f"Unknown tool: {tool_name}"
+                )
+                print(tool_result)
+
+                # 把工具调用及结果追加进对话上下文
+                messages += [
+                    {"role": "assistant", "tool_calls": [tool_call]},
+                    {"role": "tool", "tool_call_id": tool_call.id, "content": str(tool_result)},
+                ]
+
+            # 循环继续：模型可能根据这些结果再调用其他工具
+
 
     # 以下需在子类实现
     def context(self) -> str:

@@ -26,7 +26,7 @@ class AutoReview_workflow:
         # response = self.GradStu.run("What tools do you have?")
         # print("\n--- Response of GradStu ---")
         # print(response)
-        response = self.LitRetr.run("Find a review paper on agent.")
+        response = self.LitRetr.run("Find a review paper on agent and download it.")
         print("\n--- Response of LitRetr ---")
         print(response)
         # response = self.Professor.run("What tools do you have?")
