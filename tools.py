@@ -2,6 +2,8 @@ import arxiv
 import time
 import os
 from pypdf import PdfReader
+import ssl, certifi, urllib.request
+
 
 
 # === Base example tool (kept for demo) ===
@@ -95,19 +97,29 @@ class ArxivSearch:
                     continue
         return None
 
+    
+
     def retrieve_full_paper(self, paper_id: str) -> str:
         """
-        Download an arXiv paper by ID to a local PDF file.
-        Returns the local file path (to be used by extract_pdf_text).
+        Download an arXiv paper by ID to a local PDF file with verified SSL context.
         """
         try:
             paper = next(arxiv.Client().results(arxiv.Search(id_list=[paper_id])))
             filepath = f"retrieve_result/arxiv_{paper_id}.pdf"
-            paper.download_pdf(filename=filepath)
+            os.makedirs("retrieve_result", exist_ok=True)
+
+            # 创建安全的 HTTPS 证书上下文
+            ctx = ssl.create_default_context(cafile=certifi.where())
+
+            # 使用 urlopen 下载（替代 urlretrieve）
+            with urllib.request.urlopen(paper.pdf_url, context=ctx) as response, open(filepath, "wb") as out_file:
+                out_file.write(response.read())
+
             time.sleep(2.0)
             return filepath
         except Exception as e:
             return f"DOWNLOAD FAILED: {e}"
+
 
 
 # === Instantiate the Search Engine ===
