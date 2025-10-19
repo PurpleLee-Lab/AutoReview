@@ -54,7 +54,7 @@ class AutoReview_workflow:
         return final_review
 
     def test_Agent(self):
-        response = self.GradStu.run("What tools do you have?")
+        response = self.GradStu.run("Read the paper in PDF and tell me the main points of the paper.")
         print("\n--- Response of GradStu ---")
         print(response)
         # response = self.LitRetr.run("Find a review paper on agent and download it.")

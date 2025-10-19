@@ -11,29 +11,45 @@ def tool_1() -> str:
 
 
 # === PDF Reader Tool ===
-def extract_pdf_text(filepath: str = "retrieve_result", MAX_LEN: int = 50000) -> str:
+def extract_pdf_text(filename: str = None) -> str:
     """
-    Extract text from a local PDF file.
-    Returns up to MAX_LEN characters of extracted text.
+    Extract text from a PDF file under a fixed folder.
+    - If filename is None, return all PDF file names under the folder.
+    - If filename is given, read and return up to MAX_LEN characters of its text.
     """
+    folder = "retrieve_result"  # 固定文件夹名
+    MAX_LEN = 50000             # 固定最大长度
+
+    # 如果文件夹不存在
+    if not os.path.exists(folder):
+        return f"Folder '{folder}' not found."
+
+    # 若未指定文件名，则返回该文件夹下所有 PDF 文件
+    if filename is None:
+        files = [f for f in os.listdir(folder) if f.lower().endswith(".pdf")]
+        if not files:
+            return f"No PDF files found in '{folder}'."
+        return "Available PDF files:\n" + "\n".join(files)
+
+    # 拼接文件路径
+    filepath = os.path.join(folder, filename)
+
+    if not os.path.exists(filepath):
+        return f"File '{filename}' not found in folder '{folder}'."
+
     pdf_text = ""
     try:
         reader = PdfReader(filepath)
         for page_number, page in enumerate(reader.pages, start=1):
             try:
-                text = page.extract_text()
+                text = page.extract_text() or ""
             except Exception:
                 return f"FAILED to extract text at page {page_number}."
-
             pdf_text += f"--- Page {page_number} ---\n{text}\n"
 
         return pdf_text[:MAX_LEN]
     except Exception as e:
         return f"PDF reading failed: {e}"
-    finally:
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        time.sleep(1.0)
 
 
 # === Markdown Saver Tool ===
@@ -204,14 +220,19 @@ ALL_TOOLS = {
             "type": "function",
             "function": {
                 "name": "extract_pdf_text",
-                "description": "Extract text from a local PDF file path.",
+                "description": (
+                    "Read text from a PDF file in the fixed folder 'retrieve_result'. "
+                    "If filename is None, list all PDF files in that folder."
+                ),
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "filepath": {"type": "string", "description": "Path to the local PDF file."},
-                        "MAX_LEN": {"type": "integer", "description": "Maximum number of characters to return (default 50000)."}
+                        "filename": {
+                            "type": ["string", "null"],
+                            "description": "Name of the PDF file to read. If None, list all available PDFs."
+                        }
                     },
-                    "required": ["filepath"]
+                    "required": []
                 }
             }
         },
