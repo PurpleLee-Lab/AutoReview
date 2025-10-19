@@ -5,14 +5,13 @@ from pypdf import PdfReader
 import ssl, certifi, urllib.request
 
 
-
 # === Base example tool (kept for demo) ===
 def tool_1() -> str:
     return "This is a tool"
 
 
 # === PDF Reader Tool ===
-def extract_pdf_text(filepath: str, MAX_LEN: int = 50000) -> str:
+def extract_pdf_text(filepath: str = "retrieve_result", MAX_LEN: int = 50000) -> str:
     """
     Extract text from a local PDF file.
     Returns up to MAX_LEN characters of extracted text.
@@ -35,6 +34,26 @@ def extract_pdf_text(filepath: str, MAX_LEN: int = 50000) -> str:
         if os.path.exists(filepath):
             os.remove(filepath)
         time.sleep(1.0)
+
+
+# === Markdown Saver Tool ===
+def save_as_markdown(content: str, version: int) -> str:
+    """
+    Save given text content as a Markdown (.md) file.
+    File is saved to 'review/review(versionX).md' (folder created automatically).
+    Example:
+        version=1 -> review/review(version1).md
+    """
+    try:
+        os.makedirs("review", exist_ok=True)
+        filepath = os.path.join("review", f"review(version{version}).md")
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(content.strip() + "\n")
+
+        return f"Markdown file saved successfully: {filepath}"
+    except Exception as e:
+        return f"Markdown save failed: {e}"
 
 
 # === Main ArxivSearch Tool Class ===
@@ -80,10 +99,10 @@ class ArxivSearch:
                     paperid = r.pdf_url.split("/")[-1]
                     pubdate = str(r.published).split(" ")[0]
                     paper_sum = (
-                        f"Title: {r.title}\n"
-                        f"Summary: {r.summary}\n"
-                        f"Publication Date: {pubdate}\n"
-                        f"arXiv paper ID: {paperid}\n"
+                        f"# {r.title}\n\n"
+                        f"**Publication Date:** {pubdate}\n\n"
+                        f"**arXiv ID:** {paperid}\n\n"
+                        f"**Summary:**\n{r.summary}\n\n---\n"
                     )
                     paper_summaries.append(paper_sum)
 
@@ -96,8 +115,6 @@ class ArxivSearch:
                     time.sleep(2 * retry_count)
                     continue
         return None
-
-    
 
     def retrieve_full_paper(self, paper_id: str) -> str:
         """
@@ -121,17 +138,14 @@ class ArxivSearch:
             return f"DOWNLOAD FAILED: {e}"
 
 
-
 # === Instantiate the Search Engine ===
 arxiv_toolkit = ArxivSearch()
 
 
 if __name__ == '__main__':
-    result = arxiv_toolkit.retrieve_full_paper("2401.04934v1")
-    print(result)
-
-
-
+    result = arxiv_toolkit.find_papers_by_str("federated learning")
+    save_msg = save_as_markdown(result)
+    print(save_msg)
 
 
 # === Register All Tools ===
@@ -202,5 +216,31 @@ ALL_TOOLS = {
             }
         },
         "func": extract_pdf_text
+    },
+
+    "save_as_markdown": {
+        "meta": {
+            "type": "function",
+            "function": {
+                "name": "save_as_markdown",
+                "description": "Save text content as a Markdown file in 'review/review(versionX).md'.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "content": {
+                            "type": "string",
+                            "description": "Text content to save as Markdown."
+                        },
+                        "version": {
+                            "type": "integer",
+                            "description": "Version number used to name the file, e.g., version=1 -> 'review(version1).md'."
+                        }
+                    },
+                    "required": ["content", "version"]
+                }
+            }
+        },
+        "func": save_as_markdown
     }
+
 }
