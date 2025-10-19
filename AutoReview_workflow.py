@@ -8,7 +8,8 @@ class AutoReview_workflow:
         self.topic = topic
 
         self.api_key = api_key
-        tools_map_GradStu = { "extract_pdf_text"     : ALL_TOOLS["extract_pdf_text"] }
+        tools_map_GradStu = { "extract_pdf_text"     : ALL_TOOLS["extract_pdf_text"],
+                               "save_as_markdown"    : ALL_TOOLS["save_as_markdown"]}
 
         tools_map_LitRetr = { "find_papers_by_str"      : ALL_TOOLS["find_papers_by_str"],
                               "retrieve_full_paper"     : ALL_TOOLS["retrieve_full_paper"] }
@@ -54,7 +55,7 @@ class AutoReview_workflow:
         return final_review
 
     def test_Agent(self):
-        response = self.GradStu.run("Read the paper in PDF and tell me the main points of the paper.")
+        response = self.GradStu.run("Summarize the paper in PDF and save your summary as markdown.")
         print("\n--- Response of GradStu ---")
         print(response)
         # response = self.LitRetr.run("Find a review paper on agent and download it.")
