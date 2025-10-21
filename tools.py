@@ -5,10 +5,40 @@ from pypdf import PdfReader
 import ssl, certifi, urllib.request
 
 
-# === Base example tool (kept for demo) ===
-def tool_1() -> str:
-    return "This is a tool"
+# === Markdown Reader Tool ===
+def read_review_md(filename: str = None) -> str:
+    """
+    Read text from a Markdown (.md) file under the fixed 'review' folder.
+    - If filename is None, return all Markdown file names under the folder.
+    - If filename is given, read and return up to MAX_LEN characters of its content.
+    """
+    folder = "review"   # 固定文件夹名
+    MAX_LEN = 50000     # 最大读取长度
 
+    # 检查文件夹是否存在
+    if not os.path.exists(folder):
+        return f"Folder '{folder}' not found."
+
+    # 若未指定文件名，则列出所有 Markdown 文件
+    if filename is None:
+        files = [f for f in os.listdir(folder) if f.lower().endswith(".md")]
+        if not files:
+            return f"No Markdown (.md) files found in '{folder}'."
+        return "Available Markdown files:\n" + "\n".join(files)
+
+    # 拼接路径
+    filepath = os.path.join(folder, filename)
+
+    if not os.path.exists(filepath):
+        return f"File '{filename}' not found in folder '{folder}'."
+
+    # 读取文件内容
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+        return content[:MAX_LEN]
+    except Exception as e:
+        return f"Markdown reading failed: {e}"
 
 # === PDF Reader Tool ===
 def extract_pdf_text(filename: str = None) -> str:
@@ -166,18 +196,6 @@ if __name__ == '__main__':
 
 # === Register All Tools ===
 ALL_TOOLS = {
-    "tool_1": {
-        "meta": {
-            "type": "function",
-            "function": {
-                "name": "tool_1",
-                "description": "A simple demo tool that returns a string.",
-                "parameters": {"type": "object", "properties": {}}
-            }
-        },
-        "func": tool_1
-    },
-
     "find_papers_by_str": {
         "meta": {
             "type": "function",
@@ -262,6 +280,30 @@ ALL_TOOLS = {
             }
         },
         "func": save_as_markdown
+    },
+
+    "read_review_md": {
+        "meta": {
+            "type": "function",
+            "function": {
+                "name": "read_review_md",
+                "description": (
+                    "Read text from a Markdown (.md) file in the fixed folder 'review'. "
+                    "If filename is None, list all Markdown files in that folder."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "filename": {
+                            "type": ["string", "null"],
+                            "description": "Name of the Markdown file to read. If None, list all available .md files."
+                        }
+                    },
+                    "required": []
+                }
+            }
+        },
+        "func": read_review_md
     }
 
 }
