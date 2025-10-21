@@ -11,6 +11,7 @@ class BaseAgent:
         self.history = []
         self.max_hist_len = 15
         self.step_number = 0
+        self.state: dict[str, str] = {}
 
         base_url = "https://api.deepseek.com"
         self.client = OpenAI(api_key=api_key, base_url=base_url)
