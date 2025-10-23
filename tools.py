@@ -3,6 +3,13 @@ import time
 import os
 from pypdf import PdfReader
 import ssl, certifi, urllib.request
+from Agents.LitRetrAgent import LitRetrAgent
+from dotenv import load_dotenv
+
+
+load_dotenv()
+api_key = os.getenv('api_key')
+
 
 
 # === Markdown Reader Tool ===
@@ -188,12 +195,6 @@ class ArxivSearch:
 arxiv_toolkit = ArxivSearch()
 
 
-if __name__ == '__main__':
-    result = arxiv_toolkit.find_papers_by_str("federated learning")
-    save_msg = save_as_markdown(result)
-    print(save_msg)
-
-
 # === Register All Tools ===
 ALL_TOOLS = {
     "find_papers_by_str": {
@@ -307,3 +308,46 @@ ALL_TOOLS = {
     }
 
 }
+
+tools_map_LitRetr = { "find_papers_by_str"      : ALL_TOOLS["find_papers_by_str"],
+                      "retrieve_full_paper"     : ALL_TOOLS["retrieve_full_paper"] }
+
+LitRetr = LitRetrAgent(tools = tools_map_LitRetr, api_key = api_key)
+
+tool = {
+        "litretr_run": {
+        "meta": {
+            "type": "function",
+            "function": {
+                "name": "litretr_run",
+                "description": (
+                    "Retrieve relevant academic papers from the Literature Retrieval Agent "
+                    "based on the user-provided research topic and additional requirements. "
+                    "Returns a list of papers with title, authors, year, abstract, and URL."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "user_input": {
+                            "type": "string",
+                            "description": (
+                                "The research topic and any other relevant requirements for the literature search."
+                            )
+                        }
+                    },
+                    "required": ["user_input"]
+                }
+            }
+        },
+        "func": LitRetr.run
+    }
+}
+
+ALL_TOOLS.update(tool)
+
+
+if __name__ == '__main__':
+    # result = arxiv_toolkit.find_papers_by_str("federated learning")
+    # save_msg = save_as_markdown(result)
+    # print(save_msg)
+    print(ALL_TOOLS.keys())

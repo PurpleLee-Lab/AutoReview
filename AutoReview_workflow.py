@@ -9,15 +9,16 @@ class AutoReview_workflow:
 
         self.api_key = api_key
         tools_map_GradStu = { "extract_pdf_text"     : ALL_TOOLS["extract_pdf_text"],
-                               "save_as_markdown"    : ALL_TOOLS["save_as_markdown"]}
+                               "save_as_markdown"    : ALL_TOOLS["save_as_markdown"],
+                               "litretr_run"         : ALL_TOOLS["litretr_run"]}
 
-        tools_map_LitRetr = { "find_papers_by_str"      : ALL_TOOLS["find_papers_by_str"],
-                              "retrieve_full_paper"     : ALL_TOOLS["retrieve_full_paper"] }
+        # tools_map_LitRetr = { "find_papers_by_str"      : ALL_TOOLS["find_papers_by_str"],
+        #                       "retrieve_full_paper"     : ALL_TOOLS["retrieve_full_paper"] }
         
         tools_map_Professor = { "read_review_md": ALL_TOOLS["read_review_md"] }
 
         self.GradStu = GradStuAgent(tools = tools_map_GradStu, api_key = self.api_key)
-        self.LitRetr = LitRetrAgent(tools = tools_map_LitRetr, api_key = self.api_key)
+        # self.LitRetr = LitRetrAgent(tools = tools_map_LitRetr, api_key = self.api_key)
         self.Professor = ProfessorAgent(tools = tools_map_Professor, api_key = self.api_key)
 
     # 拟定
@@ -55,13 +56,13 @@ class AutoReview_workflow:
         return final_review
 
     def test_Agent(self):
-        # response = self.GradStu.run("Summarize the paper in PDF and save your summary as markdown.")
-        # print("\n--- Response of GradStu ---")
-        # print(response)
+        response = self.GradStu.run("阅读pdf中的论文，并用中文总结，并保存为markdown文件。")
+        print("\n--- Response of GradStu ---")
+        print(response)
         # response = self.LitRetr.run("Find a review paper on agent and download it.")
         # print("\n--- Response of LitRetr ---")
         # print(response)
-        response = self.Professor.run("Review the review paper and provide revision suggestions, and score it between 0-10 points.")
-        print("\n--- Response of Professor ---")
-        print(response)
+        # response = self.Professor.run("Review the review paper and provide revision suggestions, and score it between 0-10 points.")
+        # print("\n--- Response of Professor ---")
+        # print(response)
         
