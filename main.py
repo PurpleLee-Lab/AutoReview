@@ -9,11 +9,35 @@ api_key = os.getenv('api_key')
 def parse_args():
     """解析命令行参数"""
     parser = argparse.ArgumentParser(description="AutoReview Workflow Runner")
-    parser.add_argument('--topic', type=str, default='LLM-base Agent', help='Review topic name')
+    parser.add_argument('--topic', type=str, default='LLM-based Agent', help='Review topic name')
+    parser.add_argument('--min_citations', type=int, default=0, help='Minimum number of citations for retrieved papers')
+    parser.add_argument('--max_citations', type=int, default=5, help='Maximum number of citations for retrieved papers')
+    parser.add_argument('--max_length', type=int, default=5000, help='Maximum word count of the paper abstract')
+    parser.add_argument('--year_range', type=str, default="2020-2025", help='Year range for papers, e.g., "2020-2025"')
     return parser.parse_args()
+
+
+def build_input_string(args):
+    """
+    Build a single input string from command line arguments
+    for the AutoReview workflow.
+    """
+    input_str = (
+        f"Please write a literature review on the topic: '{args.topic}'. "
+        f"Only include papers published between {args.year_range}. "
+        f"Consider papers with citation counts between {args.min_citations} and {args.max_citations}. "
+        f"Limit the paper abstract length to {args.max_length} words. "
+    )
+    return input_str
 
 
 if __name__ == '__main__':
     args = parse_args()
-    review = AutoReview_workflow(topic=args.topic, api_key = api_key)
+    
+    # Build input string for the workflow
+    input_str = build_input_string(args)
+    
+    review = AutoReview_workflow(input_str, api_key)
+    review.run()
     review.test_Agent()
+

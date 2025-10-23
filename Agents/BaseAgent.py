@@ -74,7 +74,7 @@ class BaseAgent:
             for tool_call in tool_calls:
                 tool_name = tool_call.function.name
                 tool_args = json.loads(tool_call.function.arguments)
-                print("工具调用：", tool_name, tool_args)
+                print("工具调用：", tool_name)
 
                 tool_func = self.tool_func_map.get(tool_name)
                 tool_result = (
