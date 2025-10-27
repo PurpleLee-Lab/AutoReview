@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument('--max_citations', type=int, default=5, help='Maximum number of citations for retrieved papers')
     parser.add_argument('--max_length', type=int, default=5000, help='Maximum word count of the paper abstract')
     parser.add_argument('--year_range', type=str, default="2020-2025", help='Year range for papers, e.g., "2020-2025"')
+    parser.add_argument('--work_dir', type=str, default='./workdir', help='Working directory for saving outputs and logs')
     return parser.parse_args()
 
 
