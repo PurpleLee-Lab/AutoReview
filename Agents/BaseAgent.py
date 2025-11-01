@@ -2,7 +2,8 @@ import json
 from openai import OpenAI
 
 class BaseAgent:
-    def __init__(self, tools, api_key, workdir):
+    def __init__(self, tools, api_key, workdir, topic):
+        self.topic = topic
         self.tools_meta_map = tools
         self.tools_meta = [v["meta"] for v in tools.values()]
         self.tool_func_map = {k: v["func"] for k, v in tools.items()}
@@ -12,22 +13,24 @@ class BaseAgent:
         self.history = []
         self.max_hist_len = 15
         self.step_number = 0
-        self.state: dict[str, str] = {}
+        self.state: dict[str, str] = self.perceive_environment()
 
         base_url = "https://api.deepseek.com"
         self.client = OpenAI(api_key=api_key, base_url=base_url)
 
-    def _build_prompt(self, user_input: str) -> list:
+    def _build_prompt(self, user_input: str = "") -> list:
         """构建对话上下文（包含角色说明、历史记录、当前输入）"""
         context_text = self.context()
         role_desc_text = self.role_description()
         example_cmd_text = self.example_command()
+        state_text = json.dumps(self.state, ensure_ascii=False, indent=2)
 
         # 基础系统提示
         system_msg = {
             "role": "system",
             "content": (
                 f"{role_desc_text}\n\n"
+                f"### Current status:\n{state_text}\n\n"
                 f"Always act and respond consistently with this role, "
                 f"even when the user asks about your identity.\n\n"
                 f"### Context:\n{context_text}\n\n"
@@ -46,13 +49,15 @@ class BaseAgent:
 
         return messages
 
-    def run(self, user_input: str, state) -> str:
-        self.state = state
-        # 构建 prompt
+    def run(self, user_input: str) -> str:
+        self.state = self.perceive_environment()
         messages = self._build_prompt(user_input)
         self.history.append(("user", user_input))
 
         while True:
+            # 步骤计数 +1
+            self.step_number += 1
+
             # 调用模型
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
@@ -66,20 +71,24 @@ class BaseAgent:
             content = ai_message.content
             tool_calls = ai_message.tool_calls
 
-            # 如果没有工具调用，则返回结果
+            # ✅ 打印模型输出与 step_number
+            print(f"\n=== Step {self.step_number} ===")
+            print(f"模型输出内容：\n{content if content else '(无文本内容)'}")
+
+            # 如果没有工具调用，返回结果
             if not tool_calls:
                 self.history.append(("assistant", content))
                 self.history = self.history[-self.max_hist_len:]
+                print(f"=== 对话结束 (Step {self.step_number}) ===\n")
                 return content
 
             # 如果有多个工具调用，可以逐个处理
             for tool_call in tool_calls:
                 tool_name = tool_call.function.name
                 tool_args = json.loads(tool_call.function.arguments)
-                # 将参数转换为字符串（避免复杂结构打印出错）
                 args_str = json.dumps(tool_args, ensure_ascii=False)
 
-                # 限制输出长度（例如200字符）
+                # 限制参数输出长度
                 max_len = 200
                 if len(args_str) > max_len:
                     args_str = args_str[:max_len] + "..."
@@ -90,15 +99,13 @@ class BaseAgent:
                 tool_result = (
                     tool_func(**tool_args) if tool_func else f"Unknown tool: {tool_name}"
                 )
-                print("工具调用结果：", tool_result[:100] + '...') 
+                print("工具调用结果：", str(tool_result)[:200] + "...")
 
-                # 把工具调用及结果追加进对话上下文
+                # 把工具调用及结果追加进上下文
                 messages += [
                     {"role": "assistant", "tool_calls": [tool_call]},
                     {"role": "tool", "tool_call_id": tool_call.id, "content": str(tool_result)},
                 ]
-
-            # 循环继续：模型可能根据这些结果再调用其他工具
 
         
     # 以下需在子类实现

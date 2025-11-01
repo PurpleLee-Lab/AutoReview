@@ -16,6 +16,7 @@ def parse_args():
     parser.add_argument('--year_range', type=str, default="2020-2025", help='Year range for papers, e.g., "2020-2025"')
     parser.add_argument('--work_dir', type=str, default='./workdir', help='Working directory for saving outputs and logs')
     parser.add_argument('--human_feedback', type=bool, default=False, help='Is human feedback required?')
+    parser.add_argument('--max_iter', type=int, default=5, help='max_iter')
     return parser.parse_args()
 
 
@@ -32,15 +33,14 @@ def build_input_string(args):
     )
     return input_str
 
-
 if __name__ == '__main__':
     args = parse_args()
-    
+
     # Build input string for the workflow
     input_str = build_input_string(args)
     
-    review = AutoReview_workflow(input_str, api_key, args.work_dir)
+    review = AutoReview_workflow(input_str, topic = args.topic, api_key = api_key, workdir = args.work_dir, max_iter = args.max_iter)
 
     # review.run()
-    review.test_Agent()
+    review.run()
 
