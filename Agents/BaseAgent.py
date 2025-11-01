@@ -2,10 +2,11 @@ import json
 from openai import OpenAI
 
 class BaseAgent:
-    def __init__(self, tools, api_key):
+    def __init__(self, tools, api_key, workdir):
         self.tools_meta_map = tools
         self.tools_meta = [v["meta"] for v in tools.values()]
         self.tool_func_map = {k: v["func"] for k, v in tools.items()}
+        self.workdir = workdir
 
         # 历史对话缓存 [(role, content), ...]
         self.history = []
@@ -45,7 +46,8 @@ class BaseAgent:
 
         return messages
 
-    def run(self, user_input: str) -> str:
+    def run(self, user_input: str, state) -> str:
+        self.state = state
         # 构建 prompt
         messages = self._build_prompt(user_input)
         self.history.append(("user", user_input))
@@ -74,7 +76,15 @@ class BaseAgent:
             for tool_call in tool_calls:
                 tool_name = tool_call.function.name
                 tool_args = json.loads(tool_call.function.arguments)
-                print("工具调用：", tool_name)
+                # 将参数转换为字符串（避免复杂结构打印出错）
+                args_str = json.dumps(tool_args, ensure_ascii=False)
+
+                # 限制输出长度（例如200字符）
+                max_len = 200
+                if len(args_str) > max_len:
+                    args_str = args_str[:max_len] + "..."
+
+                print(f"工具调用：{tool_name}，参数：{args_str}")
 
                 tool_func = self.tool_func_map.get(tool_name)
                 tool_result = (
@@ -90,7 +100,7 @@ class BaseAgent:
 
             # 循环继续：模型可能根据这些结果再调用其他工具
 
-
+        
     # 以下需在子类实现
     def context(self) -> str:
         raise NotImplementedError("Subclasses should implement this method.")
@@ -100,3 +110,8 @@ class BaseAgent:
 
     def example_command(self) -> str:
         raise NotImplementedError("Subclasses should implement this method.")
+    
+    def perceive_environment(self) -> dict[str, str]:
+        raise NotImplementedError("Subclasses should implement this method.")
+
+    

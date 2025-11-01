@@ -5,34 +5,21 @@ from pypdf import PdfReader
 import ssl, certifi, urllib.request
 from Agents.LitRetrAgent import LitRetrAgent
 
+
 # === Markdown Reader Tool ===
-def read_review_md(filename: str = None) -> str:
+def read_md(filepath: str) -> str:
     """
-    Read text from a Markdown (.md) file under the fixed 'review' folder.
-    - If filename is None, return all Markdown file names under the folder.
-    - If filename is given, read and return up to MAX_LEN characters of its content.
+    Read text content from a Markdown (.md) file.
+    Args:
+        filepath: Full path to the Markdown file.
+    Returns:
+        File content (up to MAX_LEN characters) or an error message.
     """
-    folder = "review"   # 固定文件夹名
-    MAX_LEN = 50000     # 最大读取长度
-
-    # 检查文件夹是否存在
-    if not os.path.exists(folder):
-        return f"Folder '{folder}' not found."
-
-    # 若未指定文件名，则列出所有 Markdown 文件
-    if filename is None:
-        files = [f for f in os.listdir(folder) if f.lower().endswith(".md")]
-        if not files:
-            return f"No Markdown (.md) files found in '{folder}'."
-        return "Available Markdown files:\n" + "\n".join(files)
-
-    # 拼接路径
-    filepath = os.path.join(folder, filename)
+    MAX_LEN = 50000
 
     if not os.path.exists(filepath):
-        return f"File '{filename}' not found in folder '{folder}'."
+        return f"File not found: {filepath}"
 
-    # 读取文件内容
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
@@ -40,32 +27,20 @@ def read_review_md(filename: str = None) -> str:
     except Exception as e:
         return f"Markdown reading failed: {e}"
 
+
 # === PDF Reader Tool ===
-def extract_pdf_text(filename: str = None) -> str:
+def extract_pdf_text(filepath: str) -> str:
     """
-    Extract text from a PDF file under a fixed folder.
-    - If filename is None, return all PDF file names under the folder.
-    - If filename is given, read and return up to MAX_LEN characters of its text.
+    Extract text content from a PDF file.
+    Args:
+        filepath: Full path to the PDF file.
+    Returns:
+        Extracted text (up to MAX_LEN characters) or an error message.
     """
-    folder = "retrieve_result"  # 固定文件夹名
-    MAX_LEN = 50000             # 固定最大长度
-
-    # 如果文件夹不存在
-    if not os.path.exists(folder):
-        return f"Folder '{folder}' not found."
-
-    # 若未指定文件名，则返回该文件夹下所有 PDF 文件
-    if filename is None:
-        files = [f for f in os.listdir(folder) if f.lower().endswith(".pdf")]
-        if not files:
-            return f"No PDF files found in '{folder}'."
-        return "Available PDF files:\n" + "\n".join(files)
-
-    # 拼接文件路径
-    filepath = os.path.join(folder, filename)
+    MAX_LEN = 50000
 
     if not os.path.exists(filepath):
-        return f"File '{filename}' not found in folder '{folder}'."
+        return f"File not found: {filepath}"
 
     pdf_text = ""
     try:
@@ -85,10 +60,8 @@ def extract_pdf_text(filename: str = None) -> str:
 # === Markdown Saver Tool ===
 def save_as_markdown(content: str, version: int) -> str:
     """
-    Save given text content as a Markdown (.md) file.
-    File is saved to 'review/review(versionX).md' (folder created automatically).
-    Example:
-        version=1 -> review/review(version1).md
+    Save given text as a Markdown (.md) file.
+    The file is saved to 'review/review(versionX).md'.
     """
     try:
         os.makedirs("review", exist_ok=True)
@@ -108,7 +81,6 @@ class ArxivSearch:
         self.sch_engine = arxiv.Client()
 
     def _process_query(self, query: str) -> str:
-        """Process query string to fit within MAX_QUERY_LENGTH."""
         MAX_QUERY_LENGTH = 300
         if len(query) <= MAX_QUERY_LENGTH:
             return query
@@ -125,10 +97,6 @@ class ArxivSearch:
         return ' '.join(processed_query)
 
     def find_papers_by_str(self, query: str, N: int = 5) -> str:
-        """
-        Search for papers on arXiv by a query string.
-        Returns formatted paper summaries including title, summary, publication date, and arXiv ID.
-        """
         processed_query = self._process_query(query)
         max_retries = 3
         retry_count = 0
@@ -163,18 +131,12 @@ class ArxivSearch:
         return None
 
     def retrieve_full_paper(self, paper_id: str) -> str:
-        """
-        Download an arXiv paper by ID to a local PDF file with verified SSL context.
-        """
         try:
             paper = next(arxiv.Client().results(arxiv.Search(id_list=[paper_id])))
             filepath = f"retrieve_result/arxiv_{paper_id}.pdf"
             os.makedirs("retrieve_result", exist_ok=True)
 
-            # 创建安全的 HTTPS 证书上下文
             ctx = ssl.create_default_context(cafile=certifi.where())
-
-            # 使用 urlopen 下载（替代 urlretrieve）
             with urllib.request.urlopen(paper.pdf_url, context=ctx) as response, open(filepath, "wb") as out_file:
                 out_file.write(response.read())
 
@@ -232,19 +194,13 @@ ALL_TOOLS = {
             "type": "function",
             "function": {
                 "name": "extract_pdf_text",
-                "description": (
-                    "Read text from a PDF file in the fixed folder 'retrieve_result'. "
-                    "If filename is None, list all PDF files in that folder."
-                ),
+                "description": "Extract text from a PDF file given its full path.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "filename": {
-                            "type": ["string", "null"],
-                            "description": "Name of the PDF file to read. If None, list all available PDFs."
-                        }
+                        "filepath": {"type": "string", "description": "Full path to the PDF file."}
                     },
-                    "required": []
+                    "required": ["filepath"]
                 }
             }
         },
@@ -260,14 +216,8 @@ ALL_TOOLS = {
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "content": {
-                            "type": "string",
-                            "description": "Text content to save as Markdown."
-                        },
-                        "version": {
-                            "type": "integer",
-                            "description": "Version number used to name the file, e.g., version=1 -> 'review(version1).md'."
-                        }
+                        "content": {"type": "string", "description": "Text content to save as Markdown."},
+                        "version": {"type": "integer", "description": "Version number for naming the file."}
                     },
                     "required": ["content", "version"]
                 }
@@ -276,35 +226,25 @@ ALL_TOOLS = {
         "func": save_as_markdown
     },
 
-    "read_review_md": {
+    "read_md": {
         "meta": {
             "type": "function",
             "function": {
-                "name": "read_review_md",
-                "description": (
-                    "Read text from a Markdown (.md) file in the fixed folder 'review'. "
-                    "If filename is None, list all Markdown files in that folder."
-                ),
+                "name": "read_md",
+                "description": "Read text from a Markdown (.md) file given its full path.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "filename": {
-                            "type": ["string", "null"],
-                            "description": "Name of the Markdown file to read. If None, list all available .md files."
-                        }
+                        "filepath": {"type": "string", "description": "Full path to the Markdown file."}
                     },
-                    "required": []
+                    "required": ["filepath"]
                 }
             }
         },
-        "func": read_review_md
+        "func": read_md
     }
-
 }
 
 
 if __name__ == '__main__':
-    # result = arxiv_toolkit.find_papers_by_str("federated learning")
-    # save_msg = save_as_markdown(result)
-    # print(save_msg)
     print(ALL_TOOLS.keys())
