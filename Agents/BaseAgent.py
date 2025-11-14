@@ -49,14 +49,16 @@ class BaseAgent:
 
         return messages
 
-    def run(self, user_input: str) -> str:
+    def run(self, user_input: str = "") -> str:
         self.state = self.perceive_environment()
         messages = self._build_prompt(user_input)
+        print("消息提示词", messages)
         self.history.append(("user", user_input))
 
         while True:
             # 步骤计数 +1
             self.step_number += 1
+            self.state = self.perceive_environment()
 
             # 调用模型
             response = self.client.chat.completions.create(

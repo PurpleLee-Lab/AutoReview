@@ -38,7 +38,7 @@ class AutoReview_workflow:
     def run(self):
         print(f"{self.topic}, Start Review!\n")
 
-        self.GradStu.run(self.input)
+        # self.GradStu.run(self.input)
 
         # 读取配置文件
         with open("workdir/config.json", "r", encoding="utf-8") as f:
@@ -49,15 +49,15 @@ class AutoReview_workflow:
             litretr_input = config.get("LitRetr", {}).get("input", "")
             print(f"===== Iteration {i} =====")
 
+            print("GradStuAgent: Writing draft review...")
+            self.GradStu.run()
+
             if litretr_enabled:
                 print("LitRetrAgent: Searching papers...")
                 self.LitRetr.run(litretr_input)
                 config["LitRetr"]["enabled"] = False
             else:
                 print("LitRetrAgent: Skipped (disabled in config).")
-
-            print("GradStuAgent: Writing draft review...")
-            self.GradStu.run()
 
             print("ProfessorAgent: Reviewing draft...")
             self.Professor.run()

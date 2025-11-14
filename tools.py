@@ -136,7 +136,7 @@ def save_review(content: str, version: int) -> str:
     Save the review paper as a Markdown (.md) file in workdir/comments.
     """
     try:
-        save_dir = os.path.join("workdir", "comments")
+        save_dir = os.path.join("workdir", "reviews")
         os.makedirs(save_dir, exist_ok=True)
         filepath = os.path.join(save_dir, f"review(version{version}).md")
 
@@ -302,7 +302,7 @@ ALL_TOOLS = {
             "type": "function",
             "function": {
                 "name": "save_review",
-                "description": "Save a review as a Markdown file in 'workdir/comments/review(versionX).md'.",
+                "description": "Save a review as a Markdown file in 'workdir/reviews/review(versionX).md'.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -361,7 +361,7 @@ ALL_TOOLS = {
             "function": {
                 "name": "save_retrieval_request",
                 "description": "Save LitRetr agent configuration (enabled flag and retrieval request) into '/workdir/config.json'. "
-                "When there are no relevant papers available or when a new literature retrieval is needed, you should call this tool and set 'enabled' to True. "
+                "When there are no relevant papers available or when a new literature retrieval is needed, you should call this tool and set 'enabled' to True. You should carefully consider whether set 'enabled' to True. "
                 "You just need to wait for the LitRetr agent to complete its work.",
                 "parameters": {
                     "type": "object",
