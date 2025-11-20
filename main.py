@@ -41,6 +41,6 @@ if __name__ == '__main__':
     
     review = AutoReview_workflow(input_str, topic = args.topic, api_key = api_key, workdir = args.work_dir, max_iter = args.max_iter)
 
-    # review.run()
     review.run()
+    # review.test_Agent()
 

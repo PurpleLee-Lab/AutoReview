@@ -26,7 +26,7 @@ class AutoReview_workflow:
         tools_map_LitRetr = { "find_papers_by_str"   : ALL_TOOLS["find_papers_by_str"],
                               "retrieve_full_paper"  : ALL_TOOLS["retrieve_full_paper"] }
         
-        tools_map_Professor = { "save_review"            : ALL_TOOLS["save_review"],
+        tools_map_Professor = { "read_review"            : ALL_TOOLS["read_review"],
                                "save_comment"    : ALL_TOOLS["save_comment"],
                                "save_score"          : ALL_TOOLS["save_score"] }
 
@@ -50,14 +50,20 @@ class AutoReview_workflow:
             print(f"===== Iteration {i} =====")
 
             print("GradStuAgent: Writing draft review...")
-            self.GradStu.run()
 
-            if litretr_enabled:
-                print("LitRetrAgent: Searching papers...")
-                self.LitRetr.run(litretr_input)
-                config["LitRetr"]["enabled"] = False
-            else:
-                print("LitRetrAgent: Skipped (disabled in config).")
+            while True:
+                if i <= 1:
+                    self.GradStu.run(self.input)
+                else:
+                    self.GradStu.run()
+
+                if litretr_enabled:
+                    print("LitRetrAgent: Searching papers...")
+                    self.LitRetr.run(litretr_input)
+                    config["LitRetr"]["enabled"] = False
+                else:
+                    print("LitRetrAgent: Skipped (disabled in config).")
+                    break
 
             print("ProfessorAgent: Reviewing draft...")
             self.Professor.run()
@@ -67,6 +73,11 @@ class AutoReview_workflow:
 
             if score > 90:
                 print("🎯 Score > 90, Review Complete!")
+                break
+
+            user_choice = input("继续下一次迭代吗？(y/n): ").strip().lower()
+            if user_choice != "y":
+                print("用户选择停止迭代，流程结束。")
                 break
 
             time.sleep(1)
@@ -89,12 +100,12 @@ class AutoReview_workflow:
 
 
     def test_Agent(self):
-        response = self.GradStu.run("What tools do you have available?")
-        print("\n--- Response of GradStu ---")
-        print(response)
-        response = self.LitRetr.run("What tools do you have available?")
-        print("\n--- Response of LitRetr ---")
-        print(response)
+        # response = self.GradStu.run("What tools do you have available?")
+        # print("\n--- Response of GradStu ---")
+        # print(response)
+        # response = self.LitRetr.run("What tools do you have available?")
+        # print("\n--- Response of LitRetr ---")
+        # print(response)
         response = self.Professor.run("What tools do you have available?")
         print("\n--- Response of Professor ---")
         print(response)

@@ -339,7 +339,7 @@ ALL_TOOLS = {
             "type": "function",
             "function": {
                 "name": "save_score",
-                "description": "Save a numeric score into '/workdir/score.md'.",
+                "description": "Save a numeric score into '/workdir/score.md'. You need to use this tool to save the scores for each review.",
                 "parameters": {
                     "type": "object",
                     "properties": {

@@ -18,11 +18,11 @@ class ProfessorAgent(BaseAgent):
         result = {}
 
         # --- Existing review version ---
-        review_dir = os.path.join(self.workdir, "review")
+        review_dir = os.path.join(self.workdir, "reviews")
         os.makedirs(review_dir, exist_ok=True)
 
         review_files = [
-            os.path.join(self.workdir, "review", f)
+            os.path.join(self.workdir, "reviews", f)
             for f in os.listdir(review_dir)
             if os.path.isfile(os.path.join(review_dir, f))
         ]
@@ -38,5 +38,6 @@ class ProfessorAgent(BaseAgent):
             if os.path.isfile(os.path.join(comments_dir, f))
         ]
         result["Existing comments"] = ", ".join(comment_files)
+        # print(result)
 
         return result
