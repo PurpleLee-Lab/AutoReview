@@ -45,8 +45,6 @@ class AutoReview_workflow:
             config = json.load(f)
 
         for i in range(1, self.max_iter + 1):
-            litretr_enabled = config.get("LitRetr", {}).get("enabled", False)
-            litretr_input = config.get("LitRetr", {}).get("input", "")
             print(f"===== Iteration {i} =====")
 
             print("GradStuAgent: Writing draft review...")
@@ -56,6 +54,9 @@ class AutoReview_workflow:
                     self.GradStu.run(self.input)
                 else:
                     self.GradStu.run()
+
+                litretr_enabled = config.get("LitRetr", {}).get("enabled", False)
+                litretr_input = config.get("LitRetr", {}).get("input", "")
 
                 if litretr_enabled:
                     print("LitRetrAgent: Searching papers...")
