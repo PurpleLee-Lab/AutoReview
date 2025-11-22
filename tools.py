@@ -112,20 +112,58 @@ def read_literature(filepath: str) -> str:
 # === Scoring Tool ===
 def save_score(score: float) -> str:
     """
-    Save a numeric score into '/workdir/score.md'.
-    Args:
-        score: Numeric score value to record.
-    Returns:
-        Status message.
+    Update score
     """
     try:
-        os.makedirs("/workdir", exist_ok=True)
-        filepath = "/workdir/score.md"
+        project_root = os.path.dirname(os.path.abspath(__file__))
 
+        workdir = os.path.join(project_root, "workdir")
+        os.makedirs(workdir, exist_ok=True)
+
+        filepath = os.path.join(workdir, "config.json")
+
+
+        # 如果 config.json 不存在，则创建一个默认结构
+        if not os.path.exists(filepath):
+            config = {
+                "LitRetr": {
+                    "enabled": False,
+                    "input": ""
+                },
+                "Professor": {
+                    "score": score
+                }
+            }
+        else:
+            # 读取原文件
+            with open(filepath, "r", encoding="utf-8") as f:
+                try:
+                    config = json.load(f)
+                except json.JSONDecodeError:
+                    # 如果损坏，重建
+                    config = {
+                        "LitRetr": {
+                            "enabled": False,
+                            "input": ""
+                        },
+                        "Professor": {
+                            "score": score
+                        }
+                    }
+
+            # 确保字段存在
+            if "Professor" not in config:
+                config["Professor"] = {}
+
+            # 更新评分
+            config["Professor"]["score"] = score
+
+        # 写回 JSON
         with open(filepath, "w", encoding="utf-8") as f:
-            f.write(f"# Score\n\n{score}\n")
+            json.dump(config, f, indent=2, ensure_ascii=False)
 
         return f"Score {score} saved successfully to {filepath}"
+
     except Exception as e:
         return f"Score saving failed: {e}"
 
@@ -338,22 +376,22 @@ ALL_TOOLS = {
         "meta": {
             "type": "function",
             "function": {
-                "name": "save_score",
-                "description": "Save a numeric score into '/workdir/score.md'. You need to use this tool to save the scores for each review.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "score": {
-                            "type": "number",
-                            "description": "Numeric score value to write into score.md"
-                        }
-                    },
-                    "required": ["score"]
+            "name": "save_score",
+            "description": "Update the score.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                "score": {
+                    "type": "number",
+                    "description": "Numeric score value to write into config.json"
                 }
+                },
+                "required": ["score"]
+            }
             }
         },
         "func": save_score
-    },
+        },
 
     "save_retrieval_request": {
         "meta": {
@@ -423,4 +461,6 @@ ALL_TOOLS = {
 
 
 if __name__ == '__main__':
-    print(ALL_TOOLS.keys())
+    save_score(50)
+    print(save_score(50))
+    # print(ALL_TOOLS.keys())
