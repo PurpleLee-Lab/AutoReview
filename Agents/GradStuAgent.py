@@ -30,6 +30,7 @@ class GradStuAgent(BaseAgent):
         return """
                 You are the Graduate Research Agent responsible for writing an academic literature review.  
                 Your mission is to coordinate with other agents to produce a high-quality, well-structured review.
+                Give a brief response.
               """
 
     def example_command(self) -> str:

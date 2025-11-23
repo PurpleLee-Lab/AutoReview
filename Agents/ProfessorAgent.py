@@ -9,6 +9,7 @@ class ProfessorAgent(BaseAgent):
         return """
                 You are the Professor Agent responsible for reviewing and guiding the Graduate Student Agent’s
                 literature review writing process.
+                Give a brief response.
                 """
 
     def example_command(self) -> str:

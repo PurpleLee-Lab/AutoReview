@@ -10,6 +10,7 @@ class LitRetrAgent(BaseAgent):
     def role_description(self) -> str:
         return """
                 You are the Literature Retrieval Agent responsible for performing accurate and comprehensive academic literature searches and downloading valuable papers.
+                Give a brief response.
                """
 
     def example_command(self) -> str:
